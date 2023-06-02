@@ -6,7 +6,7 @@ public class Simple{
         f = new JFrame();
 
         //Creating a instance of JButton
-        JButton b = new JButton("Click");
+        JButton b = new JButton("Login");
         b.setBounds(130, 100, 100, 40);
         //Adding button in JFrame
         f.add(b);
