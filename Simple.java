@@ -4,14 +4,14 @@ public class Simple extends JFrame{
     JFrame f;
     Simple(){
         //Create button
-        JButton b=new JButton("Login");  
+        JButton b=new JButton("Login");
         b.setBounds(130,100,100, 40);
         //Adding button on frame
         add(b);
-        setSize(400,500);  
+        setSize(400,500);
         setLayout(null);
         setVisible(true);
-    }  
+    }
     public static void main(String[] args){
         new Simple();
     }
