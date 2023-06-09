@@ -6,11 +6,11 @@ import java.sql.*;
 class LoginForm extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
-    private JButton loginButton;
+    private JButton loginButton, registerButton;
 
-    private final String DB_URL = "jdbc:mysql://localhost:3306/your_database_name";
-    private final String DB_USER = "your_username";
-    private final String DB_PASSWORD = "your_password";
+    private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "4112003";
 
     public LoginForm() {
         setTitle("Login Form");
@@ -26,11 +26,14 @@ class LoginForm extends JFrame {
 
         loginButton = new JButton("Login");
 
+        registerButton = new JButton("Register");
+
         panel.add(usernameLabel);
         panel.add(usernameField);
         panel.add(passwordLabel);
         panel.add(passwordField);
         panel.add(loginButton);
+        panel.add(registerButton);
 
         loginButton.addActionListener(new ActionListener() {
             @Override
@@ -39,8 +42,8 @@ class LoginForm extends JFrame {
                 char[] password = passwordField.getPassword();
 
                 if (authenticate(username, password)) {
+                    // Code for successful login action
                     JOptionPane.showMessageDialog(null, "Login Successful");
-                    // Add code for successful login action
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid username or password");
                 }
@@ -70,6 +73,7 @@ class LoginForm extends JFrame {
         return isValid;
     }
 }
+
 public class App {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
