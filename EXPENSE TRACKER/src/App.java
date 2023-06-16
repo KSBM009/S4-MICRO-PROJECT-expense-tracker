@@ -19,10 +19,10 @@ class LoginForm extends JFrame {
         JPanel panel = new JPanel(new GridLayout(3, 2));
 
         JLabel usernameLabel = new JLabel("Username:");
-        usernameField = new JTextField(20);
+        usernameField = new JTextField(30);
 
         JLabel passwordLabel = new JLabel("Password:");
-        passwordField = new JPasswordField(20);
+        passwordField = new JPasswordField(30);
 
         loginButton = new JButton("Login");
 
