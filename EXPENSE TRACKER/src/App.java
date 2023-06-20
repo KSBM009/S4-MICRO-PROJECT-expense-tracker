@@ -71,7 +71,6 @@ class LoginForm extends JFrame {
         catch (SQLException e) {
             e.printStackTrace();
         }
-
         return isValid;
     }
 }
