@@ -19,10 +19,10 @@ class LoginForm extends JFrame {
         JPanel panel = new JPanel(new GridLayout(3, 2));
 
         JLabel usernameLabel = new JLabel("Username:");
-        usernameField = new JTextField(30);
+        usernameField = new JTextField(15);
 
         JLabel passwordLabel = new JLabel("Password:");
-        passwordField = new JPasswordField(30);
+        passwordField = new JPasswordField(15);
 
         loginButton = new JButton("Login");
 
@@ -52,7 +52,8 @@ class LoginForm extends JFrame {
 
         add(panel, BorderLayout.CENTER);
         pack();
-        setLocationRelativeTo(null); // Center the form on the screen
+        // Center the form on the screen
+        setLocationRelativeTo(null);
     }
 
     private boolean authenticate(String username, char[] password) {
@@ -66,7 +67,8 @@ class LoginForm extends JFrame {
                 ResultSet rs = stmt.executeQuery();
                 isValid = rs.next();
             }
-        } catch (SQLException e) {
+        } 
+        catch (SQLException e) {
             e.printStackTrace();
         }
 
