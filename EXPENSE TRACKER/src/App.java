@@ -42,7 +42,7 @@ class LoginForm extends JFrame {
                 char[] password = passwordField.getPassword();
 
                 if (authenticate(username, password)) {
-                    // Code for successful login action
+                    // Code for successful a login
                     JOptionPane.showMessageDialog(null, "Login Successful");
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid username or password");
