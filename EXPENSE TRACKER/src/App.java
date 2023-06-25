@@ -51,6 +51,8 @@ class LoginForm extends JFrame {
                 if (authenticate(username, password)) {
                     // Code for successful login
                     JOptionPane.showMessageDialog(null, "Login Successful");
+                    dispose(); // Close the login form
+                    new RegisterForm().setVisible(true); // Open the register form
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid username or password");
                 }
@@ -88,14 +90,14 @@ class RegisterForm extends JFrame {
     private JButton registerButton;
 
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
-    private final String DB_USER = "your_username";
-    private final String DB_PASSWORD = "your_password";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "4112003";
 
     public RegisterForm() {
         setTitle("Register Form");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new GridLayout(3, 2));
+        JPanel panel = new JPanel(new GridLayout(4, 2));
 
         JLabel usernameLabel = new JLabel("Username:");
         usernameField = new JTextField(15);
@@ -104,6 +106,7 @@ class RegisterForm extends JFrame {
         passwordField = new JPasswordField(15);
 
         registerButton = new JButton("Register");
+        registerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -125,6 +128,8 @@ class RegisterForm extends JFrame {
         panel.add(usernameField);
         panel.add(passwordLabel);
         panel.add(passwordField);
+        // Empty label for spacing
+        panel.add(new JLabel());
         panel.add(registerButton);
 
         add(panel, BorderLayout.CENTER);
