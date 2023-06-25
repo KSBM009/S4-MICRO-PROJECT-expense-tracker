@@ -69,7 +69,7 @@ class LoginForm extends JFrame {
         boolean isValid = false;
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+            String sql = "SELECT * FROM logindata WHERE username = ? AND password = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
                 stmt.setString(2, new String(password));
@@ -116,8 +116,10 @@ class RegisterForm extends JFrame {
                 if (register(username, password)) {
                     // Code for successful registration
                     JOptionPane.showMessageDialog(null, "Registration Successful");
-                    dispose(); // Close the register form
-                    new LoginForm().setVisible(true); // Open the login form
+                    // Close the register form
+                    dispose();
+                    // Open the login form
+                    new LoginForm().setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(null, "Registration Failed");
                 }
