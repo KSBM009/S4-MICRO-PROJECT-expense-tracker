@@ -30,8 +30,10 @@ class LoginForm extends JFrame {
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose(); // Close the login form
-                new RegisterForm().setVisible(true); // Open the register form
+                // Close the login form
+                dispose();
+                // Open the register form
+                new RegisterForm().setVisible(true);
             }
         });
 
@@ -69,7 +71,7 @@ class LoginForm extends JFrame {
         boolean isValid = false;
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT * FROM logindata WHERE username = ? AND password = ?";
+            String sql = "SELECT * FROM logindata WHERE UserName = ? AND Password = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
                 stmt.setString(2, new String(password));
@@ -144,7 +146,7 @@ class RegisterForm extends JFrame {
         boolean isSuccess = false;
 
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
+            String sql = "INSERT INTO logindata (UserName, Password) VALUES (?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
                 stmt.setString(2, new String(password));
