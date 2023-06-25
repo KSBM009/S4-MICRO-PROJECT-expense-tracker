@@ -27,6 +27,13 @@ class LoginForm extends JFrame {
         loginButton = new JButton("Login");
 
         registerButton = new JButton("Register");
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose(); // Close the login form
+                new RegisterForm().setVisible(true); // Open the register form
+            }
+        });
 
         panel.add(usernameLabel);
         panel.add(usernameField);
@@ -42,7 +49,7 @@ class LoginForm extends JFrame {
                 char[] password = passwordField.getPassword();
 
                 if (authenticate(username, password)) {
-                    // Code for successful a login
+                    // Code for successful login
                     JOptionPane.showMessageDialog(null, "Login Successful");
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid username or password");
@@ -67,11 +74,81 @@ class LoginForm extends JFrame {
                 ResultSet rs = stmt.executeQuery();
                 isValid = rs.next();
             }
-        } 
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return isValid;
+    }
+}
+
+class RegisterForm extends JFrame {
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JButton registerButton;
+
+    private final String DB_URL = "jdbc:mysql://localhost:3306/your_database_name";
+    private final String DB_USER = "your_username";
+    private final String DB_PASSWORD = "your_password";
+
+    public RegisterForm() {
+        setTitle("Register Form");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel panel = new JPanel(new GridLayout(3, 2));
+
+        JLabel usernameLabel = new JLabel("Username:");
+        usernameField = new JTextField(15);
+
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordField = new JPasswordField(15);
+
+        registerButton = new JButton("Register");
+        registerButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String username = usernameField.getText();
+                char[] password = passwordField.getPassword();
+
+                if (register(username, password)) {
+                    // Code for successful registration
+                    JOptionPane.showMessageDialog(null, "Registration Successful");
+                    dispose(); // Close the register form
+                    new LoginForm().setVisible(true); // Open the login form
+                } else {
+                    JOptionPane.showMessageDialog(null, "Registration Failed");
+                }
+            }
+        });
+
+        panel.add(usernameLabel);
+        panel.add(usernameField);
+        panel.add(passwordLabel);
+        panel.add(passwordField);
+        panel.add(registerButton);
+
+        add(panel, BorderLayout.CENTER);
+        pack();
+        // Center the form on the screen
+        setLocationRelativeTo(null);
+    }
+
+    private boolean register(String username, char[] password) {
+        boolean isSuccess = false;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, username);
+                stmt.setString(2, new String(password));
+                int rowsAffected = stmt.executeUpdate();
+                isSuccess = rowsAffected > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return isSuccess;
     }
 }
 
