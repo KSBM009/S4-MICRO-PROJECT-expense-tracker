@@ -53,8 +53,10 @@ class LoginForm extends JFrame {
                 if (authenticate(username, password)) {
                     // Code for successful login
                     JOptionPane.showMessageDialog(null, "Login Successful");
-                    dispose(); // Close the login form
-                    new RegisterForm().setVisible(true); // Open the register form
+                    // Close the login form
+                    dispose();
+                    // Open the register form
+                    new RegisterForm().setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid username or password");
                 }
