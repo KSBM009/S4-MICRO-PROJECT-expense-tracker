@@ -87,7 +87,7 @@ class RegisterForm extends JFrame {
     private JPasswordField passwordField;
     private JButton registerButton;
 
-    private final String DB_URL = "jdbc:mysql://localhost:3306/your_database_name";
+    private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
     private final String DB_USER = "your_username";
     private final String DB_PASSWORD = "your_password";
 
