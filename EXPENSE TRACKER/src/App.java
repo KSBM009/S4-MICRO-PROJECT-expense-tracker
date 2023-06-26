@@ -37,6 +37,8 @@ class LoginForm extends JFrame {
         // Empty label for spacing
         panel.add(new JLabel());
         panel.add(loginButton);
+        // Empty label for spacing
+        panel.add(new JLabel());
 
         registerLabel.addMouseListener(new MouseAdapter() {
             @Override
@@ -59,7 +61,7 @@ class LoginForm extends JFrame {
                     // Close the login form
                     dispose();
                     // Open the Home page
-                    new HomePage().setVisible(true);
+                    // new HomePage().setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid username or password!");
                 }
@@ -192,7 +194,7 @@ class RegisterForm extends JFrame {
     }
 }
 
-class HomePage() extends JFrame {}
+//class HomePage() extends JFrame {}
 
 public class App {
     public static void main(String[] args) {
