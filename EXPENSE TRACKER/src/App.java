@@ -61,7 +61,7 @@ class LoginForm extends JFrame {
                     // Close the login form
                     dispose();
                     // Open the Home page
-                    // new HomePage().setVisible(true);
+                    new HomePage(username).setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid username or password!");
                 }
@@ -194,6 +194,207 @@ class RegisterForm extends JFrame {
             e.printStackTrace();
         }
 
+        return isSuccess;
+    }
+}
+
+class HomePage extends JFrame {
+    private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "4112003";
+
+    private JLabel welcomeLabel;
+    private JButton viewExpensesButton;
+    private JButton addExpenseButton;
+
+    public HomePage(String username) {
+        setTitle("Home Page");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel panel = new JPanel(new GridLayout(3, 1));
+
+        // Get user's name from the database
+        String name = getUserName(username);
+        welcomeLabel = new JLabel("Welcome, " + name + "!");
+
+        viewExpensesButton = new JButton("View Expenses");
+        viewExpensesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Open the expenses view page
+                new ExpensesViewPage(username).setVisible(true);
+            }
+        });
+
+        addExpenseButton = new JButton("Add Expense");
+        addExpenseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Open the add expense form
+                new AddExpenseForm(username).setVisible(true);
+            }
+        });
+
+        panel.add(welcomeLabel);
+        panel.add(viewExpensesButton);
+        panel.add(addExpenseButton);
+
+        add(panel, BorderLayout.CENTER);
+        pack();
+        // Center the form on the screen
+        setLocationRelativeTo(null);
+    }
+
+    private String getUserName(String username) {
+        String name = "";
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "SELECT Name FROM Users WHERE UserName = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, username);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    name = rs.getString("Name");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return name;
+    }
+}
+
+class ExpensesViewPage extends JFrame {
+    private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "4112003";
+
+    private JTextArea expensesTextArea;
+
+    public ExpensesViewPage(String username) {
+        setTitle("Expenses");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        JPanel panel = new JPanel(new BorderLayout());
+
+        expensesTextArea = new JTextArea(10, 30);
+        expensesTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(expensesTextArea);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // Get expenses for the given username
+        String expenses = getExpenses(username);
+        expensesTextArea.setText(expenses);
+
+        add(panel);
+        pack();
+        // Center the form on the screen
+        setLocationRelativeTo(null);
+    }
+
+    private String getExpenses(String username) {
+        StringBuilder sb = new StringBuilder();
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "SELECT * FROM Expenses WHERE UserName = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, username);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    String date = rs.getString("Date");
+                    String category = rs.getString("Category");
+                    String amount = rs.getString("Amount");
+                    sb.append("Date: ").append(date).append("\n");
+                    sb.append("Category: ").append(category).append("\n");
+                    sb.append("Amount: ").append(amount).append("\n");
+                    sb.append("\n");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return sb.toString();
+    }
+}
+
+class AddExpenseForm extends JFrame {
+    private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
+    private final String DB_USER = "root";
+    private final String DB_PASSWORD = "4112003";
+
+    private JTextField dateField;
+    private JTextField categoryField;
+    private JTextField amountField;
+    private JButton addExpenseButton;
+
+    private String username;
+
+    public AddExpenseForm(String username) {
+        setTitle("Add Expense");
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        this.username = username;
+
+        JPanel panel = new JPanel(new GridLayout(4, 2));
+
+        JLabel dateLabel = new JLabel("Date:");
+        dateField = new JTextField(15);
+
+        JLabel categoryLabel = new JLabel("Category:");
+        categoryField = new JTextField(15);
+
+        JLabel amountLabel = new JLabel("Amount:");
+        amountField = new JTextField(15);
+
+        addExpenseButton = new JButton("Add Expense");
+        addExpenseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String date = dateField.getText();
+                String category = categoryField.getText();
+                String amount = amountField.getText();
+
+                if (addExpense(date, category, amount)) {
+                    // Code for successful expense addition
+                    JOptionPane.showMessageDialog(null, "Expense added successfully");
+                    // Close the add expense form
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Failed to add expense");
+                }
+            }
+        });
+
+        panel.add(dateLabel);
+        panel.add(dateField);
+        panel.add(categoryLabel);
+        panel.add(categoryField);
+        panel.add(amountLabel);
+        panel.add(amountField);
+        // Empty label for spacing
+        panel.add(new JLabel());
+        panel.add(addExpenseButton);
+
+        add(panel, BorderLayout.CENTER);
+        pack();
+        // Center the form on the screen
+        setLocationRelativeTo(null);
+    }
+
+    private boolean addExpense(String date, String category, String amount) {
+        boolean isSuccess = false;
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "INSERT INTO Expenses (UserName, Date, Category, Amount) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, username);
+                stmt.setString(2, date);
+                stmt.setString(3, category);
+                stmt.setString(4, amount);
+                int rowsAffected = stmt.executeUpdate();
+                isSuccess = rowsAffected > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return isSuccess;
     }
 }
