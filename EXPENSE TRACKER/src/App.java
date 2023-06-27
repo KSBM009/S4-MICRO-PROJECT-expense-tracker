@@ -4,6 +4,7 @@ import java.awt.event.*;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 class LoginForm extends JFrame {
     private JTextField usernameField;
@@ -373,6 +374,9 @@ class AddExpenseForm extends JFrame {
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
 
+                String uniqueID = generateUniqueID(conn);
+                stmt.setString(2, uniqueID);
+
                 stmt.setString(3, name);
 
                 LocalDateTime currentDateTime = LocalDateTime.now();
@@ -389,6 +393,47 @@ class AddExpenseForm extends JFrame {
             e.printStackTrace();
         }
         return isSuccess;
+    }
+
+    private String generateUniqueID(Connection conn) {
+        Random random = new Random();
+        String uniqueID;
+        boolean isUnique;
+        do {
+            uniqueID = generateRandomID();
+            isUnique = checkIDUniqueness(conn, uniqueID);
+        } while (!isUnique);
+        return uniqueID;
+    }
+
+    private String generateRandomID() {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder(10);
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            int index = random.nextInt(characters.length());
+            sb.append(characters.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    private boolean checkIDUniqueness(Connection conn, String id) {
+        boolean isUnique = true;
+        try {
+            String sql = "SELECT COUNT(*) FROM Expenses WHERE ExpenseID = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, id);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (rs.next()) {
+                        int count = rs.getInt(1);
+                        isUnique = count == 0;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isUnique;
     }
 }
 
