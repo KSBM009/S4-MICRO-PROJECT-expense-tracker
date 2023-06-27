@@ -223,6 +223,7 @@ class HomePage extends JFrame {
     private JLabel welcomeLabel;
     private JTable expensesTable;
     private JButton addExpenseButton;
+    private JButton logoutButton;
 
     public HomePage(String username) {
         setTitle("Home Page");
@@ -255,7 +256,28 @@ class HomePage extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Open the add expense form
-                new AddExpenseForm(username).setVisible(true);
+                AddExpenseForm addExpenseForm = new AddExpenseForm(username);
+                addExpenseForm.addWindowListener(new java.awt.event.WindowAdapter() {
+                    @Override
+                    public void windowClosed(java.awt.event.WindowEvent windowEvent) {
+                        refreshTable(username, tableModel); // Refresh the table when the Add Expense form is closed
+                    }
+                });
+                addExpenseForm.setVisible(true);
+            }
+        });
+
+        logoutButton = new JButton("Log Out");
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Prompt the user to log in again
+                int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to log out?", "Log Out", JOptionPane.YES_NO_OPTION);
+                if (option == JOptionPane.YES_OPTION) {
+                    dispose(); // Close the current window
+                    // Open the login form
+                    new LoginForm().setVisible(true);
+                }
             }
         });
 
@@ -264,6 +286,7 @@ class HomePage extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(addExpenseButton);
+        buttonPanel.add(logoutButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
         add(panel);
@@ -308,8 +331,14 @@ class HomePage extends JFrame {
             e.printStackTrace();
         }
     }
-}
 
+    private void refreshTable(String username, DefaultTableModel tableModel) {
+        // Clear the table
+        tableModel.setRowCount(0);
+        // Get the latest expenses
+        getExpenses(username, tableModel);
+    }
+}
 
 class AddExpenseForm extends JFrame {
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
