@@ -34,6 +34,14 @@ class LoginForm extends JFrame {
         panel.add(usernameField);
         panel.add(passwordLabel);
         panel.add(passwordField);
+        passwordField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    performLogin();
+                }
+            }
+        });
         // Empty label for spacing
         panel.add(new JLabel());
         panel.add(loginButton);
@@ -52,19 +60,7 @@ class LoginForm extends JFrame {
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String username = usernameField.getText();
-                char[] password = passwordField.getPassword();
-
-                if (authenticate(username, password)) {
-                    // Code for successful login
-                    JOptionPane.showMessageDialog(null, "Login Successful");
-                    // Close the login form
-                    dispose();
-                    // Open the Home page
-                    new HomePage(username).setVisible(true);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Invalid username or password!");
-                }
+                performLogin();
             }
         });
 
@@ -94,6 +90,23 @@ class LoginForm extends JFrame {
 
         return isValid;
     }
+    
+    private void performLogin() {
+    String username = usernameField.getText();
+    char[] password = passwordField.getPassword();
+
+    if (authenticate(username, password)) {
+            // Code for successful login
+            JOptionPane.showMessageDialog(null, "Login Successful");
+            // Close the login form
+            dispose();
+            // Open the Home page
+            new HomePage(username).setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(null, "Invalid username or password!");
+        }
+    }
+
 }
 
 class RegisterForm extends JFrame {
@@ -197,34 +210,29 @@ class RegisterForm extends JFrame {
         return isSuccess;
     }
 }
-
 class HomePage extends JFrame {
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
     private final String DB_USER = "root";
     private final String DB_PASSWORD = "4112003";
 
     private JLabel welcomeLabel;
-    private JButton viewExpensesButton;
+    private JTextArea expensesTextArea;
+    private JScrollPane scrollPane;
     private JButton addExpenseButton;
 
     public HomePage(String username) {
         setTitle("Home Page");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new GridLayout(3, 1));
+        JPanel panel = new JPanel(new BorderLayout());
 
         // Get user's name from the database
         String name = getUserName(username);
         welcomeLabel = new JLabel("Welcome, " + name + "!");
 
-        viewExpensesButton = new JButton("View Expenses");
-        viewExpensesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Open the expenses view page
-                new ExpensesViewPage(username).setVisible(true);
-            }
-        });
+        expensesTextArea = new JTextArea(10, 30);
+        expensesTextArea.setEditable(false);
+        scrollPane = new JScrollPane(expensesTextArea);
 
         addExpenseButton = new JButton("Add Expense");
         addExpenseButton.addActionListener(new ActionListener() {
@@ -235,11 +243,18 @@ class HomePage extends JFrame {
             }
         });
 
-        panel.add(welcomeLabel);
-        panel.add(viewExpensesButton);
-        panel.add(addExpenseButton);
+        panel.add(welcomeLabel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        add(panel, BorderLayout.CENTER);
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(addExpenseButton);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        // Get expenses for the given username
+        String expenses = getExpenses(username);
+        expensesTextArea.setText(expenses);
+
+        add(panel);
         pack();
         // Center the form on the screen
         setLocationRelativeTo(null);
@@ -260,36 +275,6 @@ class HomePage extends JFrame {
             e.printStackTrace();
         }
         return name;
-    }
-}
-
-class ExpensesViewPage extends JFrame {
-    private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
-    private final String DB_USER = "root";
-    private final String DB_PASSWORD = "4112003";
-
-    private JTextArea expensesTextArea;
-
-    public ExpensesViewPage(String username) {
-        setTitle("Expenses");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-
-        JPanel panel = new JPanel(new BorderLayout());
-
-        expensesTextArea = new JTextArea(10, 30);
-        expensesTextArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(expensesTextArea);
-
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        // Get expenses for the given username
-        String expenses = getExpenses(username);
-        expensesTextArea.setText(expenses);
-
-        add(panel);
-        pack();
-        // Center the form on the screen
-        setLocationRelativeTo(null);
     }
 
     private String getExpenses(String username) {
@@ -316,11 +301,13 @@ class ExpensesViewPage extends JFrame {
     }
 }
 
+
 class AddExpenseForm extends JFrame {
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
     private final String DB_USER = "root";
     private final String DB_PASSWORD = "4112003";
 
+    private JTextField nameField;
     private JTextField dateField;
     private JTextField categoryField;
     private JTextField amountField;
@@ -334,7 +321,10 @@ class AddExpenseForm extends JFrame {
 
         this.username = username;
 
-        JPanel panel = new JPanel(new GridLayout(4, 2));
+        JPanel panel = new JPanel(new GridLayout(5, 2));
+
+        JLabel nameLabel = new JLabel("Expense Name:");
+        nameField = new JTextField(15);
 
         JLabel dateLabel = new JLabel("Date:");
         dateField = new JTextField(15);
@@ -349,6 +339,7 @@ class AddExpenseForm extends JFrame {
         addExpenseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
                 String date = dateField.getText();
                 String category = categoryField.getText();
                 String amount = amountField.getText();
@@ -383,7 +374,7 @@ class AddExpenseForm extends JFrame {
     private boolean addExpense(String date, String category, String amount) {
         boolean isSuccess = false;
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "INSERT INTO Expenses (UserName, Date, Category, Amount) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO Expenses (UserName, Date, Category, ExpenseAmt) VALUES (?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
                 stmt.setString(2, date);
