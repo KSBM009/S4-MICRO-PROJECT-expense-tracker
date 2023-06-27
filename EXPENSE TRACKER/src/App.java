@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 class LoginForm extends JFrame {
     private JTextField usernameField;
@@ -301,7 +303,6 @@ class HomePage extends JFrame {
     }
 }
 
-
 class AddExpenseForm extends JFrame {
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
     private final String DB_USER = "root";
@@ -326,9 +327,6 @@ class AddExpenseForm extends JFrame {
         JLabel nameLabel = new JLabel("Expense Name:");
         nameField = new JTextField(15);
 
-        JLabel dateLabel = new JLabel("Date:");
-        dateField = new JTextField(15);
-
         JLabel categoryLabel = new JLabel("Category:");
         categoryField = new JTextField(15);
 
@@ -340,11 +338,10 @@ class AddExpenseForm extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String name = nameField.getText();
-                String date = dateField.getText();
                 String category = categoryField.getText();
                 String amount = amountField.getText();
 
-                if (addExpense(date, category, amount)) {
+                if (addExpense(name, category, amount)) {
                     // Code for successful expense addition
                     JOptionPane.showMessageDialog(null, "Expense added successfully");
                     // Close the add expense form
@@ -355,31 +352,36 @@ class AddExpenseForm extends JFrame {
             }
         });
 
-        panel.add(dateLabel);
-        panel.add(dateField);
+        panel.add(nameLabel);
+        panel.add(nameField);
         panel.add(categoryLabel);
         panel.add(categoryField);
         panel.add(amountLabel);
         panel.add(amountField);
-        // Empty label for spacing
         panel.add(new JLabel());
         panel.add(addExpenseButton);
 
         add(panel, BorderLayout.CENTER);
         pack();
-        // Center the form on the screen
         setLocationRelativeTo(null);
     }
 
-    private boolean addExpense(String date, String category, String amount) {
+    private boolean addExpense(String name, String category, String amount) {
         boolean isSuccess = false;
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "INSERT INTO Expenses (UserName, Date, Category, ExpenseAmt) VALUES (?, ?, ?, ?)";
+            String sql = "INSERT INTO Expenses (UserName, ExpenseID, ExpenseName, Date, Category, ExpenseAmt) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
-                stmt.setString(2, date);
-                stmt.setString(3, category);
-                stmt.setString(4, amount);
+
+                stmt.setString(3, name);
+
+                LocalDateTime currentDateTime = LocalDateTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                String formattedDateTime = currentDateTime.format(formatter);
+                stmt.setString(4, formattedDateTime);
+
+                stmt.setString(5, category);
+                stmt.setString(6, amount);
                 int rowsAffected = stmt.executeUpdate();
                 isSuccess = rowsAffected > 0;
             }
@@ -389,6 +391,7 @@ class AddExpenseForm extends JFrame {
         return isSuccess;
     }
 }
+
 
 public class App {
     public static void main(String[] args) {
