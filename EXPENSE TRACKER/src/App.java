@@ -213,6 +213,7 @@ class RegisterForm extends JFrame {
         return isSuccess;
     }
 }
+
 class HomePage extends JFrame {
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
     private final String DB_USER = "root";
