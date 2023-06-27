@@ -223,6 +223,7 @@ class HomePage extends JFrame {
     private JLabel welcomeLabel;
     private JTable expensesTable;
     private JButton addExpenseButton;
+    private JButton deleteExpenseButton;
     private JButton logoutButton;
 
     public HomePage(String username) {
@@ -267,6 +268,33 @@ class HomePage extends JFrame {
             }
         });
 
+        deleteExpenseButton = new JButton("Delete Expense");
+        deleteExpenseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Check if a row is selected
+                int selectedRow = expensesTable.getSelectedRow();
+                if (selectedRow == -1) {
+                    JOptionPane.showMessageDialog(null, "Please select an expense to delete.");
+                } else {
+                    // Get the expense ID from the selected row
+                    String expenseID = (String) expensesTable.getValueAt(selectedRow, 0);
+                    // Confirm deletion
+                    int option = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this expense?", "Delete Expense", JOptionPane.YES_NO_OPTION);
+                    if (option == JOptionPane.YES_OPTION) {
+                        // Delete the expense from the database
+                        if (deleteExpense(expenseID)) {
+                            // Remove the row from the table
+                            tableModel.removeRow(selectedRow);
+                            JOptionPane.showMessageDialog(null, "Expense deleted successfully.");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Failed to delete expense.");
+                        }
+                    }
+                }
+            }
+        });
+
         logoutButton = new JButton("Log Out");
         logoutButton.addActionListener(new ActionListener() {
             @Override
@@ -286,6 +314,7 @@ class HomePage extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(addExpenseButton);
+        buttonPanel.add(deleteExpenseButton);
         buttonPanel.add(logoutButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -337,6 +366,21 @@ class HomePage extends JFrame {
         tableModel.setRowCount(0);
         // Get the latest expenses
         getExpenses(username, tableModel);
+    }
+
+    private boolean deleteExpense(String expenseID) {
+        boolean isSuccess = false;
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "DELETE FROM Expenses WHERE ExpenseID = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, expenseID);
+                int rowsAffected = stmt.executeUpdate();
+                isSuccess = rowsAffected > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return isSuccess;
     }
 }
 
