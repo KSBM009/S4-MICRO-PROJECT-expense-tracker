@@ -5,6 +5,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Random;
+import javax.swing.table.DefaultTableModel;
 
 class LoginForm extends JFrame {
     private JTextField usernameField;
@@ -220,8 +221,7 @@ class HomePage extends JFrame {
     private final String DB_PASSWORD = "4112003";
 
     private JLabel welcomeLabel;
-    private JTextArea expensesTextArea;
-    private JScrollPane scrollPane;
+    private JTable expensesTable;
     private JButton addExpenseButton;
 
     public HomePage(String username) {
@@ -234,9 +234,21 @@ class HomePage extends JFrame {
         String name = getUserName(username);
         welcomeLabel = new JLabel("Welcome, " + name + "!");
 
-        expensesTextArea = new JTextArea(10, 30);
-        expensesTextArea.setEditable(false);
-        scrollPane = new JScrollPane(expensesTextArea);
+        // Create the expenses table
+        expensesTable = new JTable();
+        JScrollPane scrollPane = new JScrollPane(expensesTable);
+
+        // Create the table model
+        DefaultTableModel tableModel = new DefaultTableModel();
+        tableModel.addColumn("ID");
+        tableModel.addColumn("Expense Name");
+        tableModel.addColumn("Amount");
+        tableModel.addColumn("Date");
+        tableModel.addColumn("Category");
+        expensesTable.setModel(tableModel);
+
+        // Get expenses for the given username
+        getExpenses(username, tableModel);
 
         addExpenseButton = new JButton("Add Expense");
         addExpenseButton.addActionListener(new ActionListener() {
@@ -253,10 +265,6 @@ class HomePage extends JFrame {
         JPanel buttonPanel = new JPanel(new FlowLayout());
         buttonPanel.add(addExpenseButton);
         panel.add(buttonPanel, BorderLayout.SOUTH);
-
-        // Get expenses for the given username
-        String expenses = getExpenses(username);
-        expensesTextArea.setText(expenses);
 
         add(panel);
         pack();
@@ -281,8 +289,7 @@ class HomePage extends JFrame {
         return name;
     }
 
-    private String getExpenses(String username) {
-        StringBuilder sb = new StringBuilder();
+    private void getExpenses(String username, DefaultTableModel tableModel) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
             String sql = "SELECT * FROM Expenses WHERE UserName = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -294,20 +301,15 @@ class HomePage extends JFrame {
                     String amount = rs.getString("ExpenseAmt");
                     String date = rs.getString("Date");
                     String category = rs.getString("Category");
-                    sb.append("ID: ").append(ID).append("\n");
-                    sb.append("Expense Name: ").append(Ename).append("\n");
-                    sb.append("Amount: ").append(amount).append("\n");
-                    sb.append("Date: ").append(date).append("\n");
-                    sb.append("Category: ").append(category).append("\n");
-                    sb.append("\n");
+                    tableModel.addRow(new Object[]{ID, Ename, amount, date, category});
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return sb.toString();
     }
 }
+
 
 class AddExpenseForm extends JFrame {
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
