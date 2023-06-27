@@ -288,12 +288,16 @@ class HomePage extends JFrame {
                 stmt.setString(1, username);
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
+                    String ID = rs.getString("ExpenseID");
+                    String Ename = rs.getString("ExpenseName");
+                    String amount = rs.getString("ExpenseAmt");
                     String date = rs.getString("Date");
                     String category = rs.getString("Category");
-                    String amount = rs.getString("Amount");
+                    sb.append("ID: ").append(ID).append("\n");
+                    sb.append("Expense Name: ").append(Ename).append("\n");
+                    sb.append("Amount: ").append(amount).append("\n");
                     sb.append("Date: ").append(date).append("\n");
                     sb.append("Category: ").append(category).append("\n");
-                    sb.append("Amount: ").append(amount).append("\n");
                     sb.append("\n");
                 }
             }
@@ -310,7 +314,6 @@ class AddExpenseForm extends JFrame {
     private final String DB_PASSWORD = "4112003";
 
     private JTextField nameField;
-    private JTextField dateField;
     private JTextField categoryField;
     private JTextField amountField;
     private JButton addExpenseButton;
@@ -396,7 +399,6 @@ class AddExpenseForm extends JFrame {
     }
 
     private String generateUniqueID(Connection conn) {
-        Random random = new Random();
         String uniqueID;
         boolean isUnique;
         do {
