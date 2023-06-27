@@ -139,15 +139,19 @@ class RegisterForm extends JFrame {
                 String age = ageField.getText();
                 String salary = salaryField.getText();
 
-                if (register(username, password, name, age, salary)) {
-                    // Code for successful registration
-                    JOptionPane.showMessageDialog(null, "Registration Successful");
-                    // Close the register form
-                    dispose();
-                    // Open the login form
-                    new LoginForm().setVisible(true);
+                if (name.isEmpty() || salary.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Please fill in Your Name and Salary.");
                 } else {
-                    JOptionPane.showMessageDialog(null, "Registration Failed");
+                    if (register(username, password, name, age, salary)) {
+                        // Code for successful registration
+                        JOptionPane.showMessageDialog(null, "Registration Successful");
+                        // Close the register form
+                        dispose();
+                        // Open the login form
+                        new LoginForm().setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Registration Failed");
+                    }
                 }
             }
         });
@@ -193,8 +197,6 @@ class RegisterForm extends JFrame {
         return isSuccess;
     }
 }
-
-//class HomePage() extends JFrame {}
 
 public class App {
     public static void main(String[] args) {
