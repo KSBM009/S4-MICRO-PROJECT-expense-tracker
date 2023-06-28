@@ -4,13 +4,14 @@ import java.awt.event.*;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
+import java.util.*;
 import javax.swing.table.DefaultTableModel;
 
 class LoginForm extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JLabel registerLabel;
+    private JCheckBox staySignedInCheckbox;
 
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
     private final String DB_USER = "root";
@@ -20,7 +21,7 @@ class LoginForm extends JFrame {
         setTitle("Login Form");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new GridLayout(4, 2));
+        JPanel panel = new JPanel(new GridLayout(5, 2));
 
         JLabel usernameLabel = new JLabel("Username:");
         usernameField = new JTextField(15);
@@ -33,6 +34,8 @@ class LoginForm extends JFrame {
         registerLabel = new JLabel("<html><u>New to the App?</u></html>");
         registerLabel.setForeground(Color.BLUE);
         registerLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        staySignedInCheckbox = new JCheckBox("Stay Signed In");
 
         panel.add(usernameLabel);
         panel.add(usernameField);
@@ -51,6 +54,10 @@ class LoginForm extends JFrame {
         panel.add(loginButton);
         // Empty label for spacing
         panel.add(new JLabel());
+        panel.add(registerLabel);
+        // Empty label for spacing
+        panel.add(new JLabel());
+        panel.add(staySignedInCheckbox);
 
         registerLabel.addMouseListener(new MouseAdapter() {
             @Override
@@ -67,9 +74,6 @@ class LoginForm extends JFrame {
                 performLogin();
             }
         });
-
-        // Updated: Added registerLabel to the panel
-        panel.add(registerLabel);
 
         add(panel, BorderLayout.CENTER);
         pack();
@@ -94,32 +98,33 @@ class LoginForm extends JFrame {
 
         return isValid;
     }
-    
-    private void performLogin() {
-    String username = usernameField.getText();
-    char[] password = passwordField.getPassword();
 
-    if (authenticate(username, password)) {
+    private void performLogin() {
+        String username = usernameField.getText();
+        char[] password = passwordField.getPassword();
+        boolean staySignedIn = staySignedInCheckbox.isSelected();
+
+        if (authenticate(username, password)) {
             // Code for successful login
             JOptionPane.showMessageDialog(null, "Login Successful");
             // Close the login form
             dispose();
             // Open the Home page
-            new HomePage(username).setVisible(true);
+            new HomePage(username, staySignedIn).setVisible(true);
         } else {
             JOptionPane.showMessageDialog(null, "Invalid username or password!");
         }
     }
-
 }
 
 class RegisterForm extends JFrame {
+    private JTextField nameField;
     private JTextField usernameField;
     private JPasswordField passwordField;
-    private JTextField nameField;
     private JTextField ageField;
     private JTextField salaryField;
     private JButton registerButton;
+    private JButton cancelButton;
 
     private final String DB_URL = "jdbc:mysql://localhost:3306/java_s4_mini_project";
     private final String DB_USER = "root";
@@ -129,16 +134,16 @@ class RegisterForm extends JFrame {
         setTitle("Register Form");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel(new GridLayout(6, 2));
+        JPanel panel = new JPanel(new GridLayout(7, 3));
+
+        JLabel nameLabel = new JLabel("Name:");
+        nameField = new JTextField(15);
 
         JLabel usernameLabel = new JLabel("Username:");
         usernameField = new JTextField(15);
 
         JLabel passwordLabel = new JLabel("Password:");
         passwordField = new JPasswordField(15);
-
-        JLabel nameLabel = new JLabel("Name:");
-        nameField = new JTextField(15);
 
         JLabel ageLabel = new JLabel("Age:");
         ageField = new JTextField(15);
@@ -150,41 +155,50 @@ class RegisterForm extends JFrame {
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
                 String username = usernameField.getText();
                 char[] password = passwordField.getPassword();
-                String name = nameField.getText();
                 String age = ageField.getText();
                 String salary = salaryField.getText();
 
                 if (name.isEmpty() || salary.isEmpty()) {
                     JOptionPane.showMessageDialog(null, "Please fill in Your Name and Salary.");
                 } else {
-                    if (register(username, password, name, age, salary)) {
+                    if (registerUser(name, username, password, age, salary)) {
                         // Code for successful registration
-                        JOptionPane.showMessageDialog(null, "Registration Successful");
-                        // Close the register form
+                        JOptionPane.showMessageDialog(null, "Registration Successful. Please log in.");
+                        // Close the registration form
                         dispose();
                         // Open the login form
                         new LoginForm().setVisible(true);
                     } else {
-                        JOptionPane.showMessageDialog(null, "Registration Failed");
+                        JOptionPane.showMessageDialog(null, "Registration Failed. Please try again.");
                     }
                 }
             }
         });
 
+        cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose(); // Close the form
+                // Open the login form
+                new LoginForm().setVisible(true);
+            }
+        });
+
+        panel.add(nameLabel);
+        panel.add(nameField);
         panel.add(usernameLabel);
         panel.add(usernameField);
         panel.add(passwordLabel);
         panel.add(passwordField);
-        panel.add(nameLabel);
-        panel.add(nameField);
         panel.add(ageLabel);
         panel.add(ageField);
         panel.add(salaryLabel);
         panel.add(salaryField);
-        // Empty label for spacing
-        panel.add(new JLabel());
+        panel.add(cancelButton);
         panel.add(registerButton);
 
         add(panel, BorderLayout.CENTER);
@@ -193,25 +207,22 @@ class RegisterForm extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private boolean register(String username, char[] password, String name, String age, String salary) {
-        boolean isSuccess = false;
-
+    private boolean registerUser(String name, String username, char[] password, String age, String salary) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "INSERT INTO Users (UserName, Password, Name, Age, Salary) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Users (Name, UserName, Password, Age, Salary) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, username);
-                stmt.setString(2, new String(password));
-                stmt.setString(3, name);
+                stmt.setString(1, name);
+                stmt.setString(2, username);
+                stmt.setString(3, new String(password));
                 stmt.setString(4, age);
                 stmt.setString(5, salary);
                 int rowsAffected = stmt.executeUpdate();
-                isSuccess = rowsAffected > 0;
+                return rowsAffected > 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return isSuccess;
+        return false;
     }
 }
 
@@ -221,12 +232,14 @@ class HomePage extends JFrame {
     private final String DB_PASSWORD = "4112003";
 
     private JLabel welcomeLabel;
+    private JLabel totalExpensesLabel;
     private JTable expensesTable;
     private JButton addExpenseButton;
     private JButton deleteExpenseButton;
     private JButton logoutButton;
+    private JCheckBox groupByCategoryCheckbox;
 
-    public HomePage(String username) {
+    public HomePage(String username, boolean staySignedIn) {
         setTitle("Home Page");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -234,7 +247,7 @@ class HomePage extends JFrame {
 
         // Get user's name from the database
         String name = getUserName(username);
-        welcomeLabel = new JLabel("Welcome, " + name + "!");
+        welcomeLabel = new JLabel("Welcome, " +name+ "!");
 
         // Create the expenses table
         expensesTable = new JTable();
@@ -309,6 +322,17 @@ class HomePage extends JFrame {
             }
         });
 
+        groupByCategoryCheckbox = new JCheckBox("Group by Category");
+        groupByCategoryCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Refresh the table with grouping if checkbox is selected
+                refreshTable(username, tableModel);
+            }
+        });
+
+        totalExpensesLabel = new JLabel("Total Expenses: " + getTotalExpenses(username));
+
         panel.add(welcomeLabel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
 
@@ -316,16 +340,25 @@ class HomePage extends JFrame {
         buttonPanel.add(addExpenseButton);
         buttonPanel.add(deleteExpenseButton);
         buttonPanel.add(logoutButton);
+        buttonPanel.add(groupByCategoryCheckbox);
+
         panel.add(buttonPanel, BorderLayout.SOUTH);
+        panel.add(totalExpensesLabel, BorderLayout.SOUTH);
 
         add(panel);
         pack();
         // Center the form on the screen
         setLocationRelativeTo(null);
+
+        // Stay signed in functionality
+        if (!staySignedIn) {
+            setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        }
     }
 
     private String getUserName(String username) {
         String name = "";
+
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
             String sql = "SELECT Name FROM Users WHERE UserName = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -338,6 +371,7 @@ class HomePage extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return name;
     }
 
@@ -350,9 +384,11 @@ class HomePage extends JFrame {
                 while (rs.next()) {
                     String ID = rs.getString("ExpenseID");
                     String Ename = rs.getString("ExpenseName");
-                    String amount = rs.getString("ExpenseAmt");
+                    double amount = rs.getDouble("ExpenseAmt");
                     String date = rs.getString("Date");
                     String category = rs.getString("Category");
+                    
+                    // Add the expense to the table
                     tableModel.addRow(new Object[]{ID, Ename, amount, date, category});
                 }
             }
@@ -366,21 +402,65 @@ class HomePage extends JFrame {
         tableModel.setRowCount(0);
         // Get the latest expenses
         getExpenses(username, tableModel);
+        // Get expenses based on grouping
+        if (groupByCategoryCheckbox.isSelected()) {
+            getGroupedExpenses(username, tableModel);
+        } else {
+            getExpenses(username, tableModel);
+        }
+        // Update the total expenses label
+        totalExpensesLabel.setText("Total Expenses: " + getTotalExpenses(username));
+    }
+
+    private void getGroupedExpenses(String username, DefaultTableModel tableModel) {
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "SELECT Category, SUM(ExpenseAmt) AS TotalAmount FROM Expenses WHERE UserName = ? GROUP BY Category";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, username);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    String category = rs.getString("Category");
+                    double totalAmount = rs.getDouble("TotalAmount");
+                    // Add the category and total amount as a row in the table
+                    tableModel.addRow(new Object[]{"", "", totalAmount, "", category});
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean deleteExpense(String expenseID) {
-        boolean isSuccess = false;
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
             String sql = "DELETE FROM Expenses WHERE ExpenseID = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, expenseID);
                 int rowsAffected = stmt.executeUpdate();
-                isSuccess = rowsAffected > 0;
+                return rowsAffected > 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return isSuccess;
+        return false;
+    }
+
+    private double getTotalExpenses(String username) {
+        double totalExpenses = 0.0;
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+            String sql = "SELECT SUM(ExpenseAmt) AS TotalAmount FROM Expenses WHERE UserName = ?";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, username);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    totalExpenses = rs.getDouble("TotalAmount");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return totalExpenses;
     }
 }
 
@@ -389,23 +469,20 @@ class AddExpenseForm extends JFrame {
     private final String DB_USER = "root";
     private final String DB_PASSWORD = "4112003";
 
-    private JTextField nameField;
+    private JTextField expenseNameField;
     private JTextField categoryField;
     private JTextField amountField;
     private JButton addExpenseButton;
-
-    private String username;
+    private JButton cancelButton;
 
     public AddExpenseForm(String username) {
         setTitle("Add Expense");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        this.username = username;
-
         JPanel panel = new JPanel(new GridLayout(5, 2));
 
-        JLabel nameLabel = new JLabel("Expense Name:");
-        nameField = new JTextField(15);
+        JLabel expenseNameLabel = new JLabel("Expense Name:");
+        expenseNameField = new JTextField(15);
 
         JLabel categoryLabel = new JLabel("Category:");
         categoryField = new JTextField(15);
@@ -417,28 +494,34 @@ class AddExpenseForm extends JFrame {
         addExpenseButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String name = nameField.getText();
+                String expenseName = expenseNameField.getText();
+                double amount = Double.parseDouble(amountField.getText());
                 String category = categoryField.getText();
-                String amount = amountField.getText();
 
-                if (addExpense(name, category, amount)) {
-                    // Code for successful expense addition
-                    JOptionPane.showMessageDialog(null, "Expense added successfully");
-                    // Close the add expense form
-                    dispose();
+                if (addExpense(username, expenseName, amount, category)) {
+                    JOptionPane.showMessageDialog(null, "Expense added successfully.");
+                    dispose(); // Close the form
                 } else {
-                    JOptionPane.showMessageDialog(null, "Failed to add expense");
+                    JOptionPane.showMessageDialog(null, "Failed to add expense.");
                 }
             }
         });
 
-        panel.add(nameLabel);
-        panel.add(nameField);
-        panel.add(categoryLabel);
-        panel.add(categoryField);
+        cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose(); // Close the form
+            }
+        });
+
+        panel.add(expenseNameLabel);
+        panel.add(expenseNameField);
         panel.add(amountLabel);
         panel.add(amountField);
-        panel.add(new JLabel());
+        panel.add(categoryLabel);
+        panel.add(categoryField);
+        panel.add(cancelButton);
         panel.add(addExpenseButton);
 
         add(panel, BorderLayout.CENTER);
@@ -446,17 +529,17 @@ class AddExpenseForm extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    private boolean addExpense(String name, String category, String amount) {
-        boolean isSuccess = false;
+    private boolean addExpense(String username, String expenseName, double amount, String category) {
         try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "INSERT INTO Expenses (UserName, ExpenseID, ExpenseName, Date, Category, ExpenseAmt) VALUES (?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO Expenses (UserName, ExpenseID, ExpenseName, ExpenseAmt, Date, Category) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, username);
 
                 String uniqueID = generateUniqueID(conn);
                 stmt.setString(2, uniqueID);
 
-                stmt.setString(3, name);
+                stmt.setString(3, expenseName);
+                stmt.setDouble(4, amount);
 
                 LocalDateTime currentDateTime = LocalDateTime.now();
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -464,14 +547,13 @@ class AddExpenseForm extends JFrame {
                 stmt.setString(4, formattedDateTime);
 
                 stmt.setString(5, category);
-                stmt.setString(6, amount);
                 int rowsAffected = stmt.executeUpdate();
-                isSuccess = rowsAffected > 0;
+                return rowsAffected > 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return isSuccess;
+        return false;
     }
 
     private String generateUniqueID(Connection conn) {
