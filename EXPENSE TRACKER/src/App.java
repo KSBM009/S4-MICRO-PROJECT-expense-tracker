@@ -225,7 +225,6 @@ class HomePage extends JFrame {
     private JButton addExpenseButton;
     private JButton deleteExpenseButton;
     private JButton logoutButton;
-    private JCheckBox groupByCategoryCheckbox;
 
     public HomePage(String username) {
         setTitle("Home Page");
@@ -310,15 +309,6 @@ class HomePage extends JFrame {
             }
         });
 
-        groupByCategoryCheckbox = new JCheckBox("Group by Category");
-        groupByCategoryCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Refresh the table with grouping if checkbox is selected
-                refreshTable(username, tableModel);
-            }
-        });
-
         panel.add(welcomeLabel, BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
 
@@ -376,30 +366,6 @@ class HomePage extends JFrame {
         tableModel.setRowCount(0);
         // Get the latest expenses
         getExpenses(username, tableModel);
-        // Get expenses based on grouping
-        if (groupByCategoryCheckbox.isSelected()) {
-            getGroupedExpenses(username, tableModel);
-        } else {
-            getExpenses(username, tableModel);
-        }
-    }
-
-    private void getGroupedExpenses(String username, DefaultTableModel tableModel) {
-        try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
-            String sql = "SELECT Category, SUM(ExpenseAmt) AS TotalAmount FROM Expenses WHERE UserName = ? GROUP BY Category";
-            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setString(1, username);
-                ResultSet rs = stmt.executeQuery();
-                while (rs.next()) {
-                    String category = rs.getString("Category");
-                    double totalAmount = rs.getDouble("TotalAmount");
-                    // Add the category and total amount as a row in the table
-                    tableModel.addRow(new Object[]{"", "", totalAmount, "", category});
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     private boolean deleteExpense(String expenseID) {
